@@ -1,0 +1,9 @@
+{
+  "name": "traders-live-session",
+  "version": "1.0.0",
+  "description": "Registration page for Trader's Live Session",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.8.4",
+    "axios": "^1.6.0"
+  }
+}

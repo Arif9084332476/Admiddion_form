@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trader's Live Session Registration</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glow { text-shadow: 0 0 10px #10b981, 0 0 20px #10b981, 0 0 30px #10b981; }
+    .glow-box { box-shadow: 0 0 15px 5px rgba(16, 185, 129, 0.5), 0 0 30px 10px rgba(16, 185, 129, 0.3), 0 0 45px 15px rgba(16, 185, 129, 0.2); }
+    .ticker { font-family: monospace; font-size: 0.875rem; white-space: nowrap; overflow: hidden; position: absolute; top: -1.5rem; left: 0; right: 0; color: #10b981; background: #111827; padding: 0.3rem 0; animation: scroll 20s linear infinite; }
+    @keyframes scroll { 0% { transform: translateX(100%);} 100% { transform: translateX(-100%);} }
+    .hidden { display: none; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-black via-gray-900 to-black min-h-screen flex items-center justify-center p-6 text-white relative">
+
+  <div class="ticker">
+    📈 BTC +2.3% | ETH +1.1% | NASDAQ -0.8% | NIFTY +0.5% | GOLD -0.4% | MARKET OPEN 📉
+  </div>
+
+  <div class="bg-gray-900 rounded-2xl glow-box w-full max-w-2xl p-8 border border-green-700 relative overflow-hidden">
+
+    <!-- FORM SECTION -->
+    <div id="formSection">
+      <h2 class="text-3xl font-semibold text-center text-green-400 mb-6 glow">🚀 Register for Trader's Live Session</h2>
+      <p class="text-center text-sm text-gray-400 mb-6">Jahan paisa bolta hai aur strategy jeetati hai — wahi se shuruaat karo!</p>
+
+      <form id="registrationForm" class="space-y-5">
+        <div>
+          <label class="block mb-1 font-medium text-green-300">Full Name</label>
+          <input type="text" name="name" required class="w-full px-4 py-2 border border-gray-700 bg-gray-800 rounded-md">
+        </div>
+
+        <div>
+          <label class="block mb-1 font-medium text-green-300">Email Address</label>
+          <input type="email" name="email" required class="w-full px-4 py-2 border border-gray-700 bg-gray-800 rounded-md">
+        </div>
+
+        <div>
+          <label class="block mb-1 font-medium text-green-300">Phone Number (WhatsApp)</label>
+          <input type="tel" name="phone" required class="w-full px-4 py-2 border border-gray-700 bg-gray-800 rounded-md">
+        </div>
+
+        <div>
+          <label class="block mb-1 font-medium text-green-300">Trading Experience</label>
+          <select name="experience" required class="w-full px-4 py-2 border border-gray-700 bg-gray-800 rounded-md">
+            <option value="" disabled selected>Select your experience</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-1 font-medium text-green-300">What do you want to learn?</label>
+          <textarea name="learning_goals" rows="3" class="w-full px-4 py-2 border border-gray-700 bg-gray-800 rounded-md"></textarea>
+        </div>
+
+        <!-- Pay & Register Button -->
+        <div class="text-center mt-6">
+          <button type="button" id="payBtn" class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600">
+            Pay ₹49 & Register
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- LOADING INDICATOR -->
+    <div id="loadingSection" class="hidden text-center space-y-4">
+      <div class="flex justify-center">
+        <svg class="animate-spin h-10 w-10 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+      <p class="text-green-300">Processing your payment...</p>
+    </div>
+
+    <!-- SUCCESS MESSAGE -->
+    <div id="thankYouSection" class="hidden text-center space-y-4">
+      <h2 class="text-2xl font-bold text-green-400">✅ Thank you for Registration!</h2>
+      <p class="text-gray-300">Our team will contact you within an hour.</p>
+    </div>
+
+    <!-- ERROR MESSAGE -->
+    <div id="errorSection" class="hidden text-center space-y-4">
+      <h2 class="text-2xl font-bold text-red-400">❌ Payment Failed</h2>
+      <p class="text-gray-300" id="errorMessage">Sorry, your payment was not successful. Please try again.</p>
+      <button id="tryAgainBtn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 mt-4">
+        Try Again
+      </button>
+    </div>
+  </div>
+
+  <!-- Razorpay Integration -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    const RAZORPAY_KEY = "rzp_test_R5Dp98mCaSgQDM"; // Test key
+
+    // Get DOM elements
+    const formSection = document.getElementById('formSection');
+    const loadingSection = document.getElementById('loadingSection');
+    const thankYouSection = document.getElementById('thankYouSection');
+    const errorSection = document.getElementById('errorSection');
+    const errorMessage = document.getElementById('errorMessage');
+    const tryAgainBtn = document.getElementById('tryAgainBtn');
+    const registrationForm = document.getElementById('registrationForm');
+    const payBtn = document.getElementById('payBtn');
+
+    // Show/hide sections
+    function showSection(section) {
+      [formSection, loadingSection, thankYouSection, errorSection].forEach(sec => {
+        sec.classList.add('hidden');
+      });
+      section.classList.remove('hidden');
+    }
+
+    // Try again button handler
+    tryAgainBtn.addEventListener('click', function() {
+      showSection(formSection);
+    });
+
+    // Payment button handler
+    payBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+
+      // Validate form
+      if (!registrationForm.checkValidity()) {
+        registrationForm.reportValidity();
+        return;
+      }
+
+      // Get form data
+      const formData = {
+        name: registrationForm.name.value,
+        email: registrationForm.email.value,
+        phone: registrationForm.phone.value,
+        experience: registrationForm.experience.value,
+        learning_goals: registrationForm.learning_goals.value
+      };
+
+      // Create order and initiate payment
+      showSection(loadingSection);
+
+      // First create an order on server
+      fetch('/.netlify/functions/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ amount: 49 }) // ₹49
+      })
+      .then(response => response.json())
+      .then(orderData => {
+        // Create Razorpay order
+        var options = {
+          "key": RAZORPAY_KEY,
+          "amount": orderData.amount,
+          "currency": "INR",
+          "name": "Trader's Live Session",
+          "description": "Registration Fee",
+          "order_id": orderData.id,
+          "prefill": {
+            "name": formData.name,
+            "email": formData.email,
+            "contact": formData.phone
+          },
+          "handler": function (response) {
+            showSection(loadingSection);
+            
+            // Verify payment on backend with all form data
+            const verificationData = {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              ...formData
+            };
+
+            // Send data to Netlify function
+            fetch('/.netlify/functions/verify-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(verificationData)
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showSection(thankYouSection);
+                registrationForm.reset();
+              } else {
+                errorMessage.textContent = data.message || "Payment verification failed";
+                showSection(errorSection);
+              }
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+              errorMessage.textContent = "Network error. Please try again.";
+              showSection(errorSection);
+            });
+          },
+          "modal": {
+            "ondismiss": function() {
+              // User closed the payment modal without completing payment
+              showSection(formSection);
+            }
+          },
+          "theme": { 
+            "color": "#10b981",
+            "backdrop_color": "#111827"
+          }
+        };
+
+        var rzp = new Razorpay(options);
+        rzp.open();
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        errorMessage.textContent = "Failed to create order. Please try again.";
+        showSection(errorSection);
+      });
+    });
+  </script>
+</body>
+</html>
